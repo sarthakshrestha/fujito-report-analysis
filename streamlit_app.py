@@ -104,6 +104,10 @@ if uploaded_file is not None:
         )
         
         st.altair_chart(status_bar_chart, use_container_width=True)
+
+        # Show a preview of the Latest Status of customers
+        st.write("**Preview of the Latest Status of Customers**")
+        st.write(status_data[['Status', 'Customers']])  # Displaying the Status and corresponding Customers
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
 
