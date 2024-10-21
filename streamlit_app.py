@@ -228,7 +228,10 @@ if uploaded_file is not None:
     # New section to show reasons for overdue balances
     if 'Reason' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Reasons for Overdue Balances"):
-            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason']]
+            # Create the overdue reasons DataFrame and sort it by 'Remaining Balance to Collect' in descending order
+            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason', 'To change to green']]
+            overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)  # Sort in descending order
+            
             st.dataframe(overdue_reasons, use_container_width=True)
 
     else:
