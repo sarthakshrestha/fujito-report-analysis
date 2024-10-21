@@ -144,6 +144,13 @@ if uploaded_file is not None:
             # Display the average balance data
             st.write(average_balance, use_container_width=True)
 
+    # New section to show top customers with the most Overdue PDCs
+    if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Top Customers with Overdue PDCs"):
+            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs']].sort_values(by='No. of Overdue PDCs', ascending=False)
+            st.subheader("Customers with Most Overdue PDCs")
+            st.write(overdue_pdc, use_container_width=True)
+
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
 
