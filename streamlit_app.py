@@ -78,17 +78,17 @@ if uploaded_file is not None:
         # Count the occurrences of each status
         status_counts = df["Latest Status"].value_counts()
         
-        # Create a DataFrame for the pie chart
+        # Create a DataFrame for the bar chart
         status_data = pd.DataFrame({
             'Status': status_counts.index,
             'Count': status_counts.values
         })
         
-        # Create a pie chart showing the distribution of Latest Status
-        status_pie_chart = alt.Chart(status_data).mark_arc(innerRadius=50).encode(
-            theta=alt.Theta(field="Count", type="quantitative"),
-            color=alt.Color(field="Status", type="nominal", scale=alt.Scale(domain=['Green', 'Yellow', 'Red', 'Inactive'],
-                                                                            range=['#4CAF50', '#FFEB3B', '#F44336', '#9E9E9E'])),
+        # Create a bar chart showing the distribution of Latest Status
+        status_bar_chart = alt.Chart(status_data).mark_bar().encode(
+            x=alt.X('Status', title='Status'),
+            y=alt.Y('Count', title='Count'),
+            color=alt.Color('Status', type='nominal', legend=alt.Legend(title="Status")),
             tooltip=["Status", "Count"]
         ).properties(
             width=400,
@@ -96,11 +96,10 @@ if uploaded_file is not None:
             title="Distribution of Latest Status"
         )
         
-        st.altair_chart(status_pie_chart, use_container_width=True)
+        st.altair_chart(status_bar_chart, use_container_width=True)
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
-    
-    status.update(label="Analysis complete", state="complete", expanded=False)
 
+    status.update(label="Analysis complete", state="complete", expanded=False)
 else:
     st.warning('👈 Please upload an Excel file to start the analysis.')
