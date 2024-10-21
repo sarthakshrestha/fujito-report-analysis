@@ -14,7 +14,7 @@ with open("styles.css") as css:
 st.title('Fujito Report Analysis')
 
 with st.expander('About this app'):
-    st.subheader('**What can this app do?**')
+    st.markdown('**What can this app do?**')
     st.info('This app allows users to upload an Excel file containing report data and performs a basic analysis on it.')
     
     st.markdown('**How to use the app?**')
@@ -93,10 +93,17 @@ if uploaded_file is not None:
         status_bar_chart = alt.Chart(status_data).mark_bar().encode(
             x=alt.X('Status', title='Status'),
             y=alt.Y('Count', title='Count'),
-            color=alt.Color('Status', type='nominal', legend=alt.Legend(title="Status")),
+            color=alt.Color(
+                'Status:N',
+                scale=alt.Scale(
+                    domain=['Green', 'Inactive', 'Red', 'Yellow'],  # Define the statuses
+                    range=['green', 'blue', 'red', 'yellow']    # Corresponding colors
+                ),
+                legend=alt.Legend(title="Status")
+            ),
             tooltip=[alt.Tooltip("Status", title="Status"), 
-                     alt.Tooltip("Count", title="Count"),
-                     alt.Tooltip("Customers", title="Customer Names")]
+                     alt.Tooltip("Count", title="Count")
+                     ]
         ).properties(
             width=400,
             height=400,
@@ -105,12 +112,41 @@ if uploaded_file is not None:
         
         st.altair_chart(status_bar_chart, use_container_width=True)
 
-        # Show a preview of the Latest Status of customers
-        st.write("**Preview of the Latest Status of Customers**")
-        st.write(status_data[['Status', 'Customers']])  # Displaying the Status and corresponding Customers
+        # Show a preview of the Latest Status of customers in an expander
+        with st.expander("Preview of the Latest Status of Customers"):
+            # Create a select box for statuses
+            selected_status = st.selectbox("Select a Status", status_data['Status'].unique())
+
+            # Filter the customers based on the selected status
+            filtered_customers = status_data[status_data['Status'] == selected_status]['Customers'].values[0]
+
+            # Create a search box for customer names
+            search_term = st.text_input("Search Customers", "")
+
+            # Filter customers based on the search term
+            if search_term:
+                filtered_customers = [customer for customer in filtered_customers if search_term.lower() in customer.lower()]
+
+            # Display the filtered customer names in a text area
+            st.write(f"**Customers for {selected_status}:**")
+            if filtered_customers:
+                st.text_area("Filtered Customers", "\n".join(filtered_customers), height=300)  # Updated to use text area
+            else:
+                st.write("No customers found.")
+    
+    # New section to calculate and display average balances
+    if 'Balance (Latest)' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Average Balance of Customers"):
+            st.subheader("Average Balance of Customers")
+            average_balance = df.groupby('Customer Name')['Balance (Latest)'].mean().reset_index()
+            average_balance.columns = ['Customer Name', 'Average Balance']
+            
+            # Display the average balance data
+            st.write(average_balance, use_container_width=True)
+
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
 
     status.update(label="Analysis complete", state="complete", expanded=False)
 else:
-    st.warning('👈 Please upload an Excel file to start the analysis.')
+    st.warning('👈 Upload the DPR File for Analysis.')
