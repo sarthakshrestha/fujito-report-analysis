@@ -75,13 +75,18 @@ if uploaded_file is not None:
     
     # Check if 'Latest Status' column exists
     if 'Latest Status' in df.columns:
-        # Count the occurrences of each status
-        status_counts = df["Latest Status"].value_counts()
-        
+        # Count the occurrences of each status and get corresponding customer names from column D
+        status_counts = df.groupby("Latest Status")['Customer Name'].apply(list).reset_index(name='Customers')
+        status_counts['Count'] = status_counts['Customers'].apply(len)
+
+        # Ensure 'Count' is treated as numeric
+        status_counts['Count'] = pd.to_numeric(status_counts['Count'], errors='coerce')
+
         # Create a DataFrame for the bar chart
         status_data = pd.DataFrame({
-            'Status': status_counts.index,
-            'Count': status_counts.values
+            'Status': status_counts['Latest Status'],
+            'Count': status_counts['Count'],
+            'Customers': status_counts['Customers']
         })
         
         # Create a bar chart showing the distribution of Latest Status
@@ -89,7 +94,9 @@ if uploaded_file is not None:
             x=alt.X('Status', title='Status'),
             y=alt.Y('Count', title='Count'),
             color=alt.Color('Status', type='nominal', legend=alt.Legend(title="Status")),
-            tooltip=["Status", "Count"]
+            tooltip=[alt.Tooltip("Status", title="Status"), 
+                     alt.Tooltip("Count", title="Count"),
+                     alt.Tooltip("Customers", title="Customer Names")]
         ).properties(
             width=400,
             height=400,
