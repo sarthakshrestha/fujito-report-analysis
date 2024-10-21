@@ -130,6 +130,17 @@ if uploaded_file is not None:
             # Create a select box for statuses
             selected_status = st.selectbox("Select a Status", status_data['Status'].unique())
 
+            status_colors = {
+                'Green': 'lightgreen',
+                'Inactive': 'lightblue',
+                'Red': 'lightcoral',
+                'Yellow': 'orange'
+            }
+
+            if selected_status in status_colors:
+                st.markdown(f"<div style='background-color: {status_colors[selected_status]}; padding: 10px; border-radius: 5px; margin-top:10px; margin-bottom: 10px'>"
+                 f"<strong>Selected Status: {selected_status}</strong></div>", unsafe_allow_html=True)
+
             # Filter the customers based on the selected status
             filtered_customers = status_data[status_data['Status'] == selected_status]['Customers'].values[0]
 
