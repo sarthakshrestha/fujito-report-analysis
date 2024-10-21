@@ -7,15 +7,14 @@ import time
 # Page configuration (must be the first Streamlit command)
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
 
-with open("styles.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
 
 # Page title
 st.title('Fujito Report Analysis')
 
 with st.expander('About this app'):
     st.markdown('**What can this app do?**')
-    st.info('This app allows users to upload an Excel file containing report data and performs a basic analysis on it.')
+    st.info('This app allows users to upload an Excel file containing report data and perform data analysis')
     
     st.markdown('**How to use the app?**')
     st.warning('To use the app, upload an Excel file using the file uploader in the sidebar. The app will then display various analyses and visualizations based on the uploaded data.')
@@ -32,7 +31,7 @@ with st.expander('About this app'):
 # Sidebar for accepting input parameters
 with st.sidebar:
     st.title('Upload Data')
-    uploaded_file = st.file_uploader("Upload an Excel file", type=["xlsx"])
+    uploaded_file = st.file_uploader("Upload the excel file of (PDR Report)", type=["xlsx"])
 
 # Main content
 if uploaded_file is not None:
@@ -54,6 +53,7 @@ if uploaded_file is not None:
         
         # Show success message with the active count
         st.success(f"Number of Active Accounts: {active_count}")
+        st.warning(f"Number of Non-active Accounts: {non_active_count}")
         
         # Create a pie chart showing the ratio of Active to Non-Active accounts
         pie_data = pd.DataFrame({
@@ -75,6 +75,19 @@ if uploaded_file is not None:
     
     # Check if 'Latest Status' column exists
     if 'Latest Status' in df.columns:
+        # Count the occurrences of each status
+        green_count = df[df['Latest Status'] == 'Green'].shape[0]
+        inactive_count = df[df['Latest Status'] == 'Inactive'].shape[0]
+        red_count = df[df['Latest Status'] == 'Red'].shape[0]
+        yellow_count = df[df['Latest Status'] == 'Yellow'].shape[0]
+
+        # Display counts for each status
+        st.write("**Count of Customers by Latest Status:**")
+        st.success(f"Green: {green_count}")
+        st.warning(f"Inactive: {inactive_count}")
+        st.warning(f"Red: {red_count}")
+        st.warning(f"Yellow: {yellow_count}")
+
         # Count the occurrences of each status and get corresponding customer names from column D
         status_counts = df.groupby("Latest Status")['Customer Name'].apply(list).reset_index(name='Customers')
         status_counts['Count'] = status_counts['Customers'].apply(len)
@@ -121,7 +134,7 @@ if uploaded_file is not None:
             filtered_customers = status_data[status_data['Status'] == selected_status]['Customers'].values[0]
 
             # Create a search box for customer names
-            search_term = st.text_input("Search Customers", "")
+            search_term = st.text_input("Search Customers 🔍", "")
 
             # Filter customers based on the search term
             if search_term:
@@ -150,6 +163,13 @@ if uploaded_file is not None:
             overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs']].sort_values(by='No. of Overdue PDCs', ascending=False)
             st.subheader("Customers with Most Overdue PDCs")
             st.write(overdue_pdc, use_container_width=True)
+
+    # New section to show remaining balance to collect
+    if 'Remaining Balance to Collect' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Customers with the Most Remaining Balance (Top 10)"):
+            remaining_balance = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect']].sort_values(by='Remaining Balance to Collect', ascending=False).head(10)
+            st.subheader("Customers with the Most Remaining Balance")
+            st.write(remaining_balance, use_container_width=True)
 
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
