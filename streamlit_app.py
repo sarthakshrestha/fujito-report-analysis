@@ -4,6 +4,7 @@ import numpy as np
 import altair as alt
 import time
 
+#changes
 # Page configuration (must be the first Streamlit command)
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
 
