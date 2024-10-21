@@ -30,14 +30,24 @@ with st.expander('Description of the Report Analysis App'):
 with st.sidebar:
     st.title('Upload Data')
     uploaded_file = st.file_uploader("Upload the excel file of (PDR Report)", type=["xlsx"])
+    st.divider()
     st.subheader('Upload XYZ Report')
-    xyz_file = st.file_uploader("Upload the excel file of (XYZ Report)", type=["xlsx"])
-    st.subheader('Upload ABC Report')
-    xyz_file = st.file_uploader("Upload the excel file of (ABC Report)", type=["xlsx"])
 
+    report_options = ['XYZ Report', 'ABC Report']
+    selected_report = st.selectbox('Select the report to work with', report_options)
+    if selected_report == 'XYZ Report':
+        xyz_file = uploaded_file
+    elif selected_report == 'ABC Report':
+        abc_file = uploaded_file
+    else:
+        xyz_file = None
+        abc_file = None
+    
+    st.button("Fetch From S3")
 
-
-
+    # xyz_file = st.file_uploader("Upload the excel file of (XYZ Report)", type=["xlsx"])
+    # st.subheader('Upload ABC Report')
+    # xyz_file = st.file_uploader("Upload the excel file of (ABC Report)", type=["xlsx"])
 
 
 # Main content
