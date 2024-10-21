@@ -8,7 +8,7 @@ import time
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
 
 # Page title
-st.title('Fujito Report Analysis')
+st.title('Report Analytics')
 
 with st.expander('Description of the Report Analysis App'):
     st.markdown('**What can this app do?**')
@@ -30,6 +30,15 @@ with st.expander('Description of the Report Analysis App'):
 with st.sidebar:
     st.title('Upload Data')
     uploaded_file = st.file_uploader("Upload the excel file of (PDR Report)", type=["xlsx"])
+    st.subheader('Upload XYZ Report')
+    xyz_file = st.file_uploader("Upload the excel file of (XYZ Report)", type=["xlsx"])
+    st.subheader('Upload ABC Report')
+    xyz_file = st.file_uploader("Upload the excel file of (ABC Report)", type=["xlsx"])
+
+
+
+
+
 
 # Main content
 if uploaded_file is not None:
@@ -42,6 +51,14 @@ if uploaded_file is not None:
         
         st.write("**Preview of the Data**")
         st.write(df.head(5))
+    
+    st.subheader('Overdue Analysis')
+
+    # New section to show top customers with the most Overdue PDCs
+    if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
+        with st.expander("Top Customers with Overdue PDCs "):
+            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
+            st.dataframe(overdue_pdc, use_container_width=True)
 
     # Check if "Active/Non-Active" column exists
     if "Active/ Non-Active" in df.columns:
@@ -209,13 +226,7 @@ if uploaded_file is not None:
             # Display the average balance data using st.dataframe for full width
             st.dataframe(average_balance, use_container_width=True)
     
-    st.subheader('Overdue Analysis')
-
-    # New section to show top customers with the most Overdue PDCs
-    if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
-        with st.expander("Top Customers with Overdue PDCs "):
-            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
-            st.dataframe(overdue_pdc, use_container_width=True)
+    
 
     st.subheader('Collection Efficiency')
 
