@@ -7,17 +7,15 @@ import time
 # Page configuration (must be the first Streamlit command)
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
 
-
-
 # Page title
 st.title('Fujito Report Analysis')
 
-with st.expander('About this app'):
+with st.expander('Description of the Report Analysis App'):
     st.markdown('**What can this app do?**')
-    st.info('This app allows users to upload an Excel file containing report data and perform data analysis')
+    st.info('This app allows you to perform a data analysis on the PDR Report.')
     
     st.markdown('**How to use the app?**')
-    st.warning('To use the app, upload an Excel file using the file uploader in the sidebar. The app will then display various analyses and visualizations based on the uploaded data.')
+    st.warning('To use the app, simply upload the DPR report through the file uploader in the sidebar. The app will then display various analyses and visualizations based on the uploaded data.')
     
     st.markdown('**Under the hood**')
     st.markdown('Libraries used:')
@@ -25,7 +23,7 @@ with st.expander('About this app'):
     - Pandas for data wrangling
     - Numpy for numerical operations
     - Altair for chart creation
-    - Streamlit for user interface
+    - Streamlit for the user interface
     ''', language='markdown')
 
 # Sidebar for accepting input parameters
@@ -47,6 +45,7 @@ if uploaded_file is not None:
 
     # Check if "Active/Non-Active" column exists
     if "Active/ Non-Active" in df.columns:
+
         # Count the number of active and non-active accounts
         active_count = df[df["Active/ Non-Active"] == "Active"].shape[0]
         non_active_count = df[df["Active/ Non-Active"] == "Non-Active"].shape[0]
@@ -71,8 +70,30 @@ if uploaded_file is not None:
             title="Ratio of Active vs Non-Active Accounts"
         )
         
+        st.subheader("Customer Account Status")  # Added subheader
         st.altair_chart(pie_chart, use_container_width=True)
-    
+
+        active_customers = df[df["Active/ Non-Active"] == "Active"][['Customer Name']]
+        non_active_customers = df[df["Active/ Non-Active"] == "Non-Active"][['Customer Name']]
+
+        # Create a single expander for both active and non-active customers
+        with st.expander("Customer Accounts Overview of Active/Non-Active Accounts", expanded=True):
+            # Create two columns for side-by-side display
+            col1, col2 = st.columns([3, 3])
+
+            # Center the content in the columns
+            with col1:
+                st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+                st.write("**Customers with Active Accounts:**")
+                st.dataframe(active_customers, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            with col2:
+                st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+                st.write("**Customers with Non-Active Accounts:**")
+                st.dataframe(non_active_customers, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
     # Check if 'Latest Status' column exists
     if 'Latest Status' in df.columns:
         # Count the occurrences of each status
@@ -109,7 +130,7 @@ if uploaded_file is not None:
             color=alt.Color(
                 'Status:N',
                 scale=alt.Scale(
-                    domain=['Green', 'Inactive', 'Red', 'Yellow'],  # Define the statuses
+                    domain=['Green', 'Inactive', 'Red', 'Yellow'],
                     range=['lightgreen', 'lightpink', 'lightcoral', 'lightyellow']
                 ),
                 legend=alt.Legend(title="Status")
@@ -123,10 +144,11 @@ if uploaded_file is not None:
             title="Distribution of Latest Status"
         )
         
+        st.subheader("Customer Account Status")  # Added subheader
         st.altair_chart(status_bar_chart, use_container_width=True)
 
         # Show a preview of the Latest Status of customers in an expander
-        with st.expander("Preview of the Latest Status of Customers"):
+        with st.expander("View the Latest Status of Customers 📊"):
             # Create a select box for statuses
             selected_status = st.selectbox("Select a Status", status_data['Status'].unique())
 
@@ -134,7 +156,7 @@ if uploaded_file is not None:
                 'Green': 'lightgreen',
                 'Inactive': 'lightblue',
                 'Red': 'lightcoral',
-                'Yellow': 'orange'
+                'Yellow': 'lightorange'
             }
 
             if selected_status in status_colors:
@@ -154,33 +176,46 @@ if uploaded_file is not None:
             # Display the filtered customer names in a text area
             st.write(f"**Customers for {selected_status}:**")
             if filtered_customers:
-                st.text_area("Filtered Customers", "\n".join(filtered_customers), height=300)  # Updated to use text area
+                st.text_area("Filtered Customers", "\n".join(filtered_customers), height=300)
             else:
                 st.write("No customers found.")
     
     # New section to calculate and display average balances
     if 'Balance (Latest)' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Average Balance of Customers"):
+        with st.expander("Average Balance of Customers ⚖️"):
             st.subheader("Average Balance of Customers")
             average_balance = df.groupby('Customer Name')['Balance (Latest)'].mean().reset_index()
             average_balance.columns = ['Customer Name', 'Average Balance']
             
-            # Display the average balance data
-            st.write(average_balance, use_container_width=True)
+            # Display the average balance data using st.dataframe for full width
+            st.dataframe(average_balance, use_container_width=True)
+    
+    st.subheader('Overdue Analysis')
 
     # New section to show top customers with the most Overdue PDCs
-    if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Top Customers with Overdue PDCs"):
-            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs']].sort_values(by='No. of Overdue PDCs', ascending=False)
+    if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
+        with st.expander("Top Customers with Overdue PDCs "):
+            st.subheader("Overdue Analysis")  # Added subheader
+            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
             st.subheader("Customers with Most Overdue PDCs")
-            st.write(overdue_pdc, use_container_width=True)
+            st.dataframe(overdue_pdc, use_container_width=True)
+
+    st.subheader('Collection Efficiency')
 
     # New section to show remaining balance to collect
     if 'Remaining Balance to Collect' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Customers with the Most Remaining Balance (Top 10)"):
+            st.subheader("Collection Efficiency")  # Added subheader
             remaining_balance = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect']].sort_values(by='Remaining Balance to Collect', ascending=False).head(10)
             st.subheader("Customers with the Most Remaining Balance")
-            st.write(remaining_balance, use_container_width=True)
+            st.dataframe(remaining_balance, use_container_width=True)
+
+    # New section to show reasons for overdue balances
+    if 'Reason' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Reasons for Overdue Balances"):
+            st.subheader("Customer Reasons for Overdue Balances")
+            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason']]
+            st.dataframe(overdue_reasons, use_container_width=True)
 
     else:
         st.error("The 'Latest Status' column was not found in the 'Main' sheet.")
