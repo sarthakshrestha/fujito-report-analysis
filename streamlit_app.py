@@ -37,67 +37,47 @@ with st.sidebar:
 # Main content
 if uploaded_file is not None:
     with st.status("Analyzing report...", expanded=True) as status:
-        st.write("Loading data...")
-        time.sleep(1)
-        df = pd.read_excel(uploaded_file)
+        # Skip rows if necessary and use the appropriate row as the header
+        df = pd.read_excel(uploaded_file, sheet_name="Main", skiprows=1)
 
-        st.write("Processing data...")
-        time.sleep(1)
-        
-        # Simulating some basic analysis
-        total_sales = df['Sales'].sum()
-        avg_sales = df['Sales'].mean()
-        top_product = df.groupby('Product')['Sales'].sum().idxmax()
+        # Drop the first column (if it's unwanted)
+        df = df.drop(df.columns[0], axis=1)
 
-        st.write("Generating visualizations...")
-        time.sleep(1)
+        st.write("**Preview of the Data**")
+        st.write(df.head(5))
+
+    # Check if "Active/Non-Active" column exists
+    if "Active/ Non-Active" in df.columns:
+        # Count the number of active and non-active accounts
+        active_count = df[df["Active/ Non-Active"] == "Active"].shape[0]
+        non_active_count = df[df["Active/ Non-Active"] == "Non-Active"].shape[0]
+
+        # Show success message with the active count
+        st.success(f"Number of Active Accounts: {active_count}")
+
+        # Create a pie chart showing the ratio of Active to Non-Active accounts
+        pie_data = pd.DataFrame({
+            'Account Status': ['Active', 'Non-Active'],
+            'Count': [active_count, non_active_count]
+        })
+
+        pie_chart = alt.Chart(pie_data).mark_arc(innerRadius=50).encode(
+            theta=alt.Theta(field="Count", type="quantitative"),
+            color=alt.Color(field="Account Status", type="nominal", legend=alt.Legend(title="Account Status")),
+            tooltip=["Account Status", "Count"]
+        ).properties(
+            width=400,
+            height=400,
+            title="Ratio of Active vs Non-Active Accounts"
+        )
+
+        st.altair_chart(pie_chart, use_container_width=True)
+
+    else:
+        st.error("The 'Active/Non-Active' column was not found in the 'Main' sheet.")
+        st.write(df.head(5))
 
     status.update(label="Analysis complete", state="complete", expanded=False)
-
-    # Display data info
-    st.header('Report Overview', divider='rainbow')
-    col = st.columns(3)
-    col[0].metric(label="Total Sales", value=f"${total_sales:,.2f}", delta="")
-    col[1].metric(label="Average Sales", value=f"${avg_sales:,.2f}", delta="")
-    col[2].metric(label="Top Product", value=top_product, delta="")
-    
-    with st.expander('Raw Data', expanded=True):
-        st.dataframe(df.style.highlight_max(axis=0), height=210, use_container_width=True)
-
-    # Display charts
-    st.header('Sales Analysis', divider='rainbow')
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Sales by Product
-        product_sales = df.groupby('Product')['Sales'].sum().reset_index()
-        bars = alt.Chart(product_sales).mark_bar().encode(
-            x=alt.X('Product', sort='-y'),
-            y='Sales',
-            color=alt.Color('Product', scale=alt.Scale(scheme='category10'))
-        ).properties(title='Sales by Product', height=300)
-        st.altair_chart(bars, use_container_width=True)
-
-    with col2:
-        # Sales Trend
-        df['Date'] = pd.to_datetime(df['Date'])
-        sales_trend = df.groupby('Date')['Sales'].sum().reset_index()
-        line = alt.Chart(sales_trend).mark_line(point=True).encode(
-            x='Date',
-            y='Sales',
-            tooltip=['Date', 'Sales']
-        ).properties(title='Sales Trend', height=300)
-        st.altair_chart(line, use_container_width=True)
-
-    # Additional analysis
-    st.header('Product Performance', divider='rainbow')
-    product_performance = df.groupby('Product').agg({
-        'Sales': ['sum', 'mean', 'count']
-    }).reset_index()
-    product_performance.columns = ['Product', 'Total Sales', 'Average Sale', 'Number of Sales']
-    st.dataframe(product_performance.sort_values('Total Sales', ascending=False).style.highlight_max(axis=0), 
-                 height=210, use_container_width=True)
 
 else:
     st.warning('👈 Please upload an Excel file to start the analysis.')
