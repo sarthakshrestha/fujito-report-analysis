@@ -102,12 +102,31 @@ if uploaded_file is not None:
         red_count = df[df['Latest Status'] == 'Red'].shape[0]
         yellow_count = df[df['Latest Status'] == 'Yellow'].shape[0]
 
-        # Display counts for each status
+      
+        # Create a DataFrame for the counts of customers by latest status
+        status_counts_df = pd.DataFrame({
+            'Status': ['Green', 'Inactive', 'Red', 'Yellow'],
+            'Count': [green_count, inactive_count, red_count, yellow_count]
+        })
+
+        st.markdown(f"**Green Status:** {green_count}")
+        st.markdown(f"**Inactive Status:** {inactive_count}")
+        st.markdown(f"**Red Status:** {red_count}")
+        st.markdown(f"**Yellow Status:** {yellow_count}")
+
+        def highlight_status(row):
+            color_map = {
+                'Green': 'darkgreen',
+                'Inactive': 'darkblue',
+                'Red': 'lightcoral',
+                'Yellow': 'darkorange'
+            }
+            return [f'background-color: {color_map[row["Status"]]}' for _ in row]
+
+        # Display the counts in a DataFrame format
         st.write("**Count of Customers by Latest Status:**")
-        st.success(f"Green: {green_count}")
-        st.warning(f"Inactive: {inactive_count}")
-        st.warning(f"Red: {red_count}")
-        st.warning(f"Yellow: {yellow_count}")
+        st.dataframe(status_counts_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
+        
 
         # Count the occurrences of each status and get corresponding customer names from column D
         status_counts = df.groupby("Latest Status")['Customer Name'].apply(list).reset_index(name='Customers')
@@ -195,9 +214,7 @@ if uploaded_file is not None:
     # New section to show top customers with the most Overdue PDCs
     if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
         with st.expander("Top Customers with Overdue PDCs "):
-            st.subheader("Overdue Analysis")  # Added subheader
             overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
-            st.subheader("Customers with Most Overdue PDCs")
             st.dataframe(overdue_pdc, use_container_width=True)
 
     st.subheader('Collection Efficiency')
@@ -205,15 +222,12 @@ if uploaded_file is not None:
     # New section to show remaining balance to collect
     if 'Remaining Balance to Collect' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Customers with the Most Remaining Balance (Top 10)"):
-            st.subheader("Collection Efficiency")  # Added subheader
             remaining_balance = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect']].sort_values(by='Remaining Balance to Collect', ascending=False).head(10)
-            st.subheader("Customers with the Most Remaining Balance")
             st.dataframe(remaining_balance, use_container_width=True)
 
     # New section to show reasons for overdue balances
     if 'Reason' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Reasons for Overdue Balances"):
-            st.subheader("Customer Reasons for Overdue Balances")
             overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason']]
             st.dataframe(overdue_reasons, use_container_width=True)
 
