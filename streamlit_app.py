@@ -110,7 +110,7 @@ if uploaded_file is not None:
                 'Status:N',
                 scale=alt.Scale(
                     domain=['Green', 'Inactive', 'Red', 'Yellow'],  # Define the statuses
-                    range=['green', 'blue', 'red', 'yellow']    # Corresponding colors
+                    range=['lightgreen', 'lightpink', 'lightcoral', 'lightyellow']
                 ),
                 legend=alt.Legend(title="Status")
             ),
