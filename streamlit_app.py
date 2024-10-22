@@ -27,7 +27,7 @@ with open( "./styles.css" ) as css:
 # Page title
 st.title('Report Analytics')
 
-with st.expander('Description of the Report Analysis App'):
+with st.expander('Description of the Report Analysis App', expanded=True):
     st.markdown('**What can this app do?**')
     st.info('This app allows you to perform a data analysis on the PDR Report.')
     
@@ -101,7 +101,7 @@ if st.session_state["uploaded_file"]:
 
     # Top customers with most Overdue PDCs
     if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
-        with st.expander("Top Customers with Overdue PDCs "):
+        with st.expander("Top Customers with Overdue PDCs ", expanded=True):
             overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
             st.dataframe(overdue_pdc, use_container_width=True)
 
@@ -216,7 +216,7 @@ if st.session_state["uploaded_file"]:
 
         st.divider()
 
-        with st.expander("View the Latest Status of Customers 📊"):
+        with st.expander("View the Latest Status of Customers 📊", expanded=True):
             selected_status = st.selectbox("Select a Status", status_data['Status'].unique())
 
             status_colors = {
@@ -244,7 +244,7 @@ if st.session_state["uploaded_file"]:
 
     # Enhanced Average Balance Analysis
     if 'Balance (Latest)' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Average Balance of Customers "):
+        with st.expander("Average Balance of Customers ", expanded=True):
             st.subheader("Average Balance of Customers")
             
             # Calculate average balance and sort by balance amount
@@ -253,75 +253,74 @@ if st.session_state["uploaded_file"]:
             average_balance = average_balance.sort_values(by='Average Balance', ascending=True)
 
             # Create two columns for the visualizations
-            col1, col2 = st.columns([2, 1])
+          
             
-            with col1:
-                # Create line chart
+          
 
-                bar_chart = alt.Chart(average_balance).mark_bar().encode(
-                    x=alt.X('Customer Name', sort=None, title='Customer'),
-                    y=alt.Y('Average Balance', title='Average Balance'),
-                    color=alt.condition(
-                        alt.datum['Average Balance'] > 10000,  # Example threshold
-                        alt.value('green'),  # Color for balances above threshold
-                        alt.value('red')     # Color for balances below threshold
-                    ),
-                    tooltip=[
-                        alt.Tooltip('Customer Name', title='Customer'),
-                        alt.Tooltip('Average Balance', title='Balance', format=',.2f')
-                    ]
-                ).properties(
-                    height=400,
-                    title='Customer Average Balances Distribution'
-                )
+            bar_chart = alt.Chart(average_balance).mark_bar().encode(
+                x=alt.X('Customer Name', sort=None, title='Customer'),
+                y=alt.Y('Average Balance', title='Average Balance'),
+                color=alt.condition(
+                    alt.datum['Average Balance'] > 10000,  # Example threshold
+                    alt.value('green'),  # Color for balances above threshold
+                    alt.value('red')     # Color for balances below threshold
+                ),
+                tooltip=[
+                    alt.Tooltip('Customer Name', title='Customer'),
+                    alt.Tooltip('Average Balance', title='Balance', format=',.2f')
+                ]
+            ).properties(
+                height=400,
+                title='Customer Average Balances Distribution'
+            )
 
-                st.altair_chart(bar_chart, use_container_width=True)
+            st.altair_chart(bar_chart, use_container_width=True)
 
 
-                line_chart = alt.Chart(average_balance).mark_line(
-                    point=alt.OverlayMarkDef(color="red", size=100)
-                ).encode(
-                    x=alt.X('Customer Name', sort=None, title='Customer'),
-                    y=alt.Y('Average Balance', title='Average Balance'),
-                    tooltip=[
-                        alt.Tooltip('Customer Name', title='Customer'),
-                        alt.Tooltip('Average Balance', title='Balance', format=',.2f')
-                    ]
-                ).properties(
-                    height=400,
-                    title='Customer Average Balances Distribution'
-                ).configure_axis(
-                    labelAngle=-45
-                )
-                st.altair_chart(line_chart, use_container_width=True)
-                
+            line_chart = alt.Chart(average_balance).mark_line(
+                point=alt.OverlayMarkDef(color="red", size=100)
+            ).encode(
+                x=alt.X('Customer Name', sort=None, title='Customer'),
+                y=alt.Y('Average Balance', title='Average Balance'),
+                tooltip=[
+                    alt.Tooltip('Customer Name', title='Customer'),
+                    alt.Tooltip('Average Balance', title='Balance', format=',.2f')
+                ]
+            ).properties(
+                height=400,
+                title='Customer Average Balances Distribution'
+            ).configure_axis(
+                labelAngle=-45
+            )
+            st.altair_chart(line_chart, use_container_width=True)
+
+            st.markdown("**Detailed Balance Data**")
+            st.dataframe(
+                average_balance.style.format({'Average Balance': '{:,.2f}'}),
+                use_container_width=True,
+                height=400
+            )
+
+            
                 # Add statistics
-                st.markdown("**Summary Statistics:**")
-                col_stats1, col_stats2, col_stats3 = st.columns(3)
-                with col_stats1:
-                    highest_balance = average_balance['Average Balance'].max()
-                    st.caption("Highest Average Balance")
-                    st.markdown(f"Rs. {highest_balance:,.2f}")
-                with col_stats2:
-                    mean_balance = average_balance['Average Balance'].mean()
-                    st.caption(" Average Balance")
-                    st.markdown(f"Rs. {mean_balance:,.2f}")
+            st.markdown("**Summary Statistics:**")
+            col_stats1, col_stats2, col_stats3 = st.columns(3)
+            with col_stats1:
+                highest_balance = average_balance['Average Balance'].max()
+                st.caption("Highest Average Balance")
+                st.markdown(f"Rs. {highest_balance:,.2f}")
+            with col_stats2:
+                mean_balance = average_balance['Average Balance'].mean()
+                st.caption(" Average Balance")
+                st.markdown(f"Rs. {mean_balance:,.2f}")
 
-                with col_stats3:
-                    lowest_balance = average_balance['Average Balance'].min()
-                    st.caption("Lowest Balance")
-                    st.markdown(f"Rs. {lowest_balance:,.2f}")
-
-            with col2:
-                # Display the detailed data table
-                
-                st.markdown("**Detailed Balance Data**")
-                st.dataframe(
-                    average_balance.style.format({'Average Balance': '{:,.2f}'}),
-                    use_container_width=True,
-                    height=400
-                )
-
+            with col_stats3:
+                lowest_balance = average_balance['Average Balance'].min()
+                st.caption("Lowest Balance")
+                st.markdown(f"Rs. {lowest_balance:,.2f}")
+            
+            
+            
             # Add top and bottom 5 customers
             col_top, col_bottom = st.columns(2)
             
@@ -340,13 +339,14 @@ if st.session_state["uploaded_file"]:
                     bottom_5.style.format({'Average Balance': '{:,.2f}'}),
                     use_container_width=True
                 )
+            col_new = st.columns(1)
 
     st.divider()
     st.subheader('Collection Efficiency')
 
     # Remaining Balance Analysis
     if 'Remaining Balance to Collect' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Customers with the Most Remaining Balance (Top 10)"):
+        with st.expander("Customers with the Most Remaining Balance (Top 10)", expanded=True):
             remaining_balance = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect']].sort_values(by='Remaining Balance to Collect', ascending=False).head(10)
 
 
@@ -389,13 +389,13 @@ if st.session_state["uploaded_file"]:
 
     # Overdue Reasons Analysis
     if 'Reason' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Reasons for Overdue Balances"):
+        with st.expander("Reasons for Overdue Balances", expanded=True):
             overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason', 'To change to green']]
             overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
             st.dataframe(overdue_reasons, use_container_width=True)
     
     if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Customers with Visit Days"):
+        with st.expander("Customers with Visit Days", expanded=True):
             # Convert 'Visit Date' to datetime
             df['Visit Date'] = pd.to_datetime(df['Visit Date'], errors='coerce')
             
