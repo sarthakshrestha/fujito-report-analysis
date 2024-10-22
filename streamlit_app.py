@@ -393,6 +393,41 @@ if st.session_state["uploaded_file"]:
             overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason', 'To change to green']]
             overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
             st.dataframe(overdue_reasons, use_container_width=True)
+    
+    if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Customers with Visit Days"):
+            # Convert 'Visit Date' to datetime
+            df['Visit Date'] = pd.to_datetime(df['Visit Date'], errors='coerce')
+            
+            # Create a custom sorting order for days of the week
+            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            
+            # Sort the dataframe by the Visit Date
+            due_this_week = df[['Customer Name', 'Visit Date']].dropna(subset=['Visit Date'])
+            due_this_week = due_this_week.sort_values('Visit Date')
+            
+            # Display the dataframe
+            st.dataframe(due_this_week, use_container_width=True)
+            
+            # Create a bar chart to visualize the distribution of visit days
+            visit_day_counts = due_this_week['Visit Date'].dt.day_name().value_counts().reindex(day_order).reset_index()
+            visit_day_counts.columns = ['Day', 'Count']
+            
+            chart = alt.Chart(visit_day_counts).mark_bar().encode(
+                x=alt.X('Day:N', sort=day_order),
+                y='Count:Q',
+                color=alt.Color('Day:N', scale=alt.Scale(scheme='category10')),
+                tooltip=['Day', 'Count']
+            ).properties(
+                title='Distribution of Customer Visit Days',
+                width=600,
+                height=400
+            )
+            
+            st.altair_chart(chart, use_container_width=True)
+
+
+       
 
     status.update(label="Analysis complete", state="complete", expanded=False)
 else:
