@@ -29,7 +29,7 @@ st.title('Report Analytics')
 
 with st.expander('Description of the Report Analysis App', expanded=True):
     st.markdown('**What can this app do?**')
-    st.info('This app allows you to perform a data analysis on the PDR Report.')
+    st.info('This app allows you to perform a data analysis along with visual chart elements on the Master sheet within the PDR Report.')
     
     st.markdown('**How to use the app?**')
     st.warning('To use the app, simply upload the DPR report through the file uploader in the sidebar. The app will then display various analyses and visualizations based on the uploaded data.')
@@ -232,7 +232,7 @@ if st.session_state["uploaded_file"]:
 
         st.divider()
 
-        st.subheader("**Count of Customers by Latest Status:**")
+        st.subheader("**Status of Customers:**")
 
 
         st.markdown(f"**Green Status:** {green_count}")
@@ -249,7 +249,7 @@ if st.session_state["uploaded_file"]:
             }
             return [f'background-color: {color_map[row["Status"]]}' for _ in row]
 
-        st.dataframe(status_counts_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
+        # st.dataframe(status_counts_df.style.apply(highlight_status, axis=1), use_container_width=True, hide_index=True)
 
         status_counts = df.groupby("Latest Status")['Customer Name'].apply(list).reset_index(name='Customers')
         status_counts['Count'] = status_counts['Customers'].apply(len)
@@ -441,10 +441,6 @@ if st.session_state["uploaded_file"]:
     if 'Remaining Balance to Collect' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Customers with the Most Remaining Balance (Top 10)", expanded=True):
             remaining_balance = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect']].sort_values(by='Remaining Balance to Collect', ascending=False).head(10)
-
-
-            st.dataframe(remaining_balance, use_container_width=True)
-
             chart = alt.Chart(remaining_balance).mark_bar().encode(
             x=alt.X('Customer Name:N', 
                     sort='-y',
@@ -452,13 +448,13 @@ if st.session_state["uploaded_file"]:
             y=alt.Y('Remaining Balance to Collect:Q',
                     axis=alt.Axis(title='Remaining Balance (Rs.)')),
             color=alt.Color('Remaining Balance to Collect:Q',
-                          scale=alt.Scale(scheme='blues'),
-                          legend=alt.Legend(title='Balance (Rs.)')),
+                        scale=alt.Scale(scheme='blues'),
+                        legend=alt.Legend(title='Balance (Rs.)')),
             tooltip=[
                 alt.Tooltip('Customer Name:N', title='Customer'),
                 alt.Tooltip('Remaining Balance to Collect:Q', 
-                           title='Remaining Balance (In Rupees)',
-                           format=',.2f')
+                        title='Remaining Balance (In Rupees)',
+                        format=',.2f')
             ]
         ).properties(
             title='Top 10 Customers by Remaining Balance',
@@ -478,6 +474,8 @@ if st.session_state["uploaded_file"]:
         final_chart = (chart + text).interactive()
         st.altair_chart(final_chart, use_container_width=True)
         st.dataframe(remaining_balance, use_container_width=True)
+
+            
 
 
     # Overdue Reasons Analysis
