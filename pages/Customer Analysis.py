@@ -150,3 +150,46 @@ if 'Latest Status' in df.columns:
             st.text_area("Filtered Customers", "\n".join(filtered_customers), height=300)
         else:
             st.write("No customers found.")
+
+        # Assuming 'Visit Date' and 'Customer Name' exist in your dataframe
+    if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
+        st.subheader("Customer Visit Days Distribution")
+
+        # Drop null values (if any) from 'Visit Day'
+        visit_days_cleaned = df['Visit Date'].dropna()
+
+        # Count occurrences of each day of the week
+        visit_day_counts = visit_days_cleaned.value_counts().reindex(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        ).reset_index()
+
+        visit_day_counts.columns = ['Day', 'Count']  # Rename columns for clarity
+
+        # Create a bar chart using Altair
+        bar_chart = alt.Chart(visit_day_counts).mark_bar().encode(
+            x=alt.X('Day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+            y=alt.Y('Count:Q', title="Number of Visits"),
+            color=alt.Color('Day:N', legend=None),
+            tooltip=['Day', 'Count']
+        ).properties(
+            title="Number of Visits per Day of the Week",
+            width=700,
+            height=400
+        )
+
+        # Display the chart in Streamlit
+        st.altair_chart(bar_chart, use_container_width=True)
+
+        # Select a day to filter customers visiting on that day
+        selected_day = st.selectbox("Select a Day to see customers", visit_day_counts['Day'])
+
+        if selected_day:
+            # Filter the dataframe to show only customers visiting on the selected dayf
+            customers_visiting = df[df['Visit Date'] == selected_day]['Customer Name']
+            
+            st.subheader(f"Customers visiting on {selected_day}")
+            if not customers_visiting.empty:
+                st.write(customers_visiting.reset_index(drop=True))  # Show the customers
+            else:
+                st.write(f"No customers are visiting on {selected_day}.")
+   
