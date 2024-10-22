@@ -28,7 +28,6 @@ with open( "./styles.css" ) as css:
 # Page title
 st.title('Report Analytics')
 
-st.subheader('Upload Data')
 
 # Button to download file from S3
 if st.button("Fetch File from DB"):
@@ -614,4 +613,6 @@ if st.session_state["uploaded_file"]:
 
     status.update(label="Analysis complete", state="complete", expanded=False)
 else:
-    st.warning('👈 Upload the DPR File for Analysis.')
+    st.info('Upload the Report for the analysis at the top of the page.')
+    st.caption('Built by:')
+    st.text('Digital Horizons')
