@@ -7,3 +7,7 @@ body,
   font-family: "DM Sans", sans-serif;
   color: #ffffff;
 }
+
+.small-font {
+  font-size: 0.8em;
+}
