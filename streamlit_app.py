@@ -1,8 +1,23 @@
+from io import BytesIO
+import io
+import os
+import boto3
+from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
 import time
+
+load_dotenv()
+
+# AWS credentials
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.getenv('AWS_REGION')
+BUCKET_NAME = 'fujito-mis'  
+FILE_NAME = 'DPR 17.08.xlsx'      
+
 
 # Page configuration (must be the first Streamlit command)
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
@@ -26,35 +41,53 @@ with st.expander('Description of the Report Analysis App'):
     - Streamlit for the user interface
     ''', language='markdown')
 
+if 'uploaded_file' not in st.session_state:
+    st.session_state['uploaded_file'] = None
+
 # Sidebar for accepting input parameters
 with st.sidebar:
     st.title('Upload Data')
-    uploaded_file = st.file_uploader("Upload the excel file of (PDR Report)", type=["xlsx"])
-    st.divider()
-    st.subheader('Upload XYZ Report')
-
-    report_options = ['XYZ Report', 'ABC Report']
-    selected_report = st.selectbox('Select the report to work with', report_options)
-    if selected_report == 'XYZ Report':
-        xyz_file = uploaded_file
-    elif selected_report == 'ABC Report':
-        abc_file = uploaded_file
-    else:
-        xyz_file = None
-        abc_file = None
     
-    st.button("Fetch From S3")
+    # Button to download file from S3
+    if st.button("Fetch File from S3"):
+        st.info("Downloading the file from S3...")
 
-    # xyz_file = st.file_uploader("Upload the excel file of (XYZ Report)", type=["xlsx"])
-    # st.subheader('Upload ABC Report')
-    # xyz_file = st.file_uploader("Upload the excel file of (ABC Report)", type=["xlsx"])
+        # Initialize the S3 client with credentials
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_REGION
+        )
 
+        try:
+            # Download the file from S3
+            s3_response = s3.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
+            uploaded_file = s3_response['Body'].read()
+            
+            # Store the uploaded file in session state
+            st.session_state['uploaded_file'] = uploaded_file
+            st.success(f"{FILE_NAME} downloaded successfully from S3!")
+        except Exception as e:
+            st.error(f"Error downloading {FILE_NAME} from S3: {e}")
+    else:
+        # Option to upload manually if not using S3
+        uploaded_file = st.file_uploader("Upload the excel file of (DPR Report)", type=["xlsx"])
+        
+        if uploaded_file:
+            st.session_state['uploaded_file'] = uploaded_file
 
 # Main content
-if uploaded_file is not None:
+if st.session_state["uploaded_file"]:
+    uploaded_file = st.session_state['uploaded_file']  # Use session state to get the uploaded file
+
     with st.status("Analyzing report...", expanded=True) as status:
+        if isinstance(uploaded_file, bytes):
+            file_buffer = io.BytesIO(uploaded_file)
+        else:
+            file_buffer = uploaded_file
         # Skip rows if necessary and use the appropriate row as the header
-        df = pd.read_excel(uploaded_file, sheet_name="Main", skiprows=1)
+        df = pd.read_excel(file_buffer, sheet_name="Main", skiprows=1)
         
         # Drop the first column (if it's unwanted)
         df = df.drop(df.columns[0], axis=1)
