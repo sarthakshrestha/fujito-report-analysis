@@ -16,18 +16,13 @@ AWS_REGION = st.secrets["aws"]['AWS_REGION']
 BUCKET_NAME = 'fujito-mis'  
 FILE_NAME = 'DPR 17.08.xlsx'
    
-
-
-# Page configuration (must be the first Streamlit command)
 st.set_page_config(page_title='Fujito Report Analysis', page_icon='📊', layout='wide')
 with open( "./styles.css" ) as css:
             st.markdown( f'<style>{css.read()}</style>' , unsafe_allow_html= True)
 
-# Page title
 st.title('Report Analytics')
 
 
-# Button to download file from S3
 if st.button("Fetch File from DB"):
     st.info("Downloading the file from DB...")
 
@@ -56,7 +51,6 @@ else:
     if uploaded_file:
         st.session_state['uploaded_file'] = uploaded_file
 
-
 with st.expander('Description of the Report Analysis App', expanded=False):
     st.markdown('**What can this app do?**')
     st.info('This app allows you to perform a data analysis along with visual chart elements on the Master sheet within the PDR Report.')
@@ -76,9 +70,6 @@ with st.expander('Description of the Report Analysis App', expanded=False):
 if 'uploaded_file' not in st.session_state:
     st.session_state['uploaded_file'] = None
 
-# Sidebar for accepting input parameters
-
-   
 # Main content
 if st.session_state["uploaded_file"]:
     uploaded_file = st.session_state['uploaded_file']
@@ -88,23 +79,13 @@ if st.session_state["uploaded_file"]:
             file_buffer = io.BytesIO(uploaded_file)
         else:
             file_buffer = uploaded_file
-        # Skip rows if necessary and use the appropriate row as the header
         df = pd.read_excel(file_buffer, sheet_name="Main", skiprows=1)
         st.session_state["df"] = df
         
-        # Drop the first column (if it's unwanted)
         df = df.drop(df.columns[0], axis=1)
         
         st.write("**Preview of the Data**")
         st.write(df.head(5))
-
-    # Enhanced Average Balance Analysis
-
-
-    # Overdue Reasons Analysis
-   
-
-    
 
     status.update(label="Analysis complete", state="complete", expanded=False)
 else:

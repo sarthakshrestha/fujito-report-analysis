@@ -12,8 +12,6 @@ import time
 
 df = st.session_state["df"]
 
-
-
 if df is None:
     st.title('Overdue Analysis')
     st.markdown("### No Data Available")
