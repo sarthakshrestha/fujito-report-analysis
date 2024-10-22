@@ -15,9 +15,7 @@ AWS_REGION = st.secrets["aws"]['AWS_REGION']
 
 BUCKET_NAME = 'fujito-mis'  
 FILE_NAME = 'DPR 17.08.xlsx'
-
-BUCKET_NAME = 'fujito-mis'  
-FILE_NAME = 'DPR 17.08.xlsx'      
+   
 
 
 # Page configuration (must be the first Streamlit command)
@@ -616,3 +614,4 @@ else:
     st.info('Upload the Report for the analysis at the top of the page.')
     st.caption('Built by:')
     st.text('Digital Horizons')
+
