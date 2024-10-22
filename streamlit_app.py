@@ -481,7 +481,69 @@ if st.session_state["uploaded_file"]:
     # Overdue Reasons Analysis
     if 'Reason' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Reasons for Overdue Balances", expanded=True):
-            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reason', 'To change to green']]
+
+            def get_overdue_reasons(row):
+                reasons = []
+                
+                if row['Active/ Non-Active'] == 'Active':
+                    # Convert Payment Terms to string
+                    payment_terms = str(row['Payment Terms'])
+                    
+                    if payment_terms.startswith('LC'):
+                        if row['Balance (Latest)'] < row['LC Value'] * 1.1:
+                            reasons.append('Green')
+                        else:
+                            reasons.append('Need LC')
+                    elif row['Remaining Balance to Collect'] < 2500:
+                        reasons.append('Green')
+                    elif row['Total Overdue Bills'] == row['Balance (Latest)']:
+                        reasons.append('All Bills are Overdue against credit days')
+                    elif row['Balance (Latest)'] > 0:
+                        if payment_terms.startswith('PDC'):
+                            if row['Minimum PDC Requirement'] > 0:
+                                reasons.append('Required PDC')
+                            if row['PDC Max Age'] >= 14:
+                                reasons.append('Overdue PDC older than 14 days')
+                            elif 0 < row['PDC Max Age'] < 14:
+                                reasons.append('Overdue PDC days between 0-14 days')
+                            if row['Total (PDC) in hand'] >= row['Bill > 7 Days']:
+                                reasons.append('Green')
+                            elif row['Total (PDC) in hand'] >= row['Bill > 7 Days'] * 0.5:
+                                reasons.append('Yellow')
+                            else:
+                                reasons.append('Red')
+                        elif payment_terms == 'Non-PDC':
+                            if row['No. of Overdue Bills'] > 2 and row['Total Overdue Bills'] > 2500:
+                                reasons.append(f"No. of overdue bills above credit days - {row['No. of Overdue Bills']}")
+                            elif 0 < row['No. of Overdue Bills'] <= 2 and row['Total Overdue Bills'] > 2500:
+                                reasons.append('No. of overdue bills between 1-2')
+                            elif row['Balance (Latest)'] <= row['Credit Limit']:
+                                reasons.append('Green')
+                            elif row['Balance (Latest)'] <= row['Credit Limit'] * 1.25:
+                                reasons.append('Balance is less than 125% of limit')
+                            else:
+                                reasons.append('Balance is more than limit')
+                        elif payment_terms == 'Cash':
+                            if row['Balance (Latest)'] > 0:
+                                reasons.append('Cash needed')
+                            else:
+                                reasons.append('Green')
+                    else:
+                        reasons.append('Green')
+                else:
+                    reasons.append('Inactive')
+                
+                return ' | '.join(reasons)
+
+                            
+                        
+
+
+
+
+
+            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
+            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reasons', 'To change to green']]
             overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
             st.dataframe(overdue_reasons, use_container_width=True)
     
