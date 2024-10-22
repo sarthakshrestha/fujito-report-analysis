@@ -534,19 +534,33 @@ if st.session_state["uploaded_file"]:
                     reasons.append('Inactive')
                 
                 return ' | '.join(reasons)
-
-                            
-                        
-
-
-
-
-
+            
             df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
             overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reasons', 'To change to green']]
             overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
             st.dataframe(overdue_reasons, use_container_width=True)
-    
+
+            # Apply the function to get overdue reasons
+            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
+
+            # Filter rows where 'Reasons' is not empty
+            overdue_reasons = df[df['Reasons'].str.strip() != ''][['Customer Name', 'Reasons', 'To change to green']]
+            overdue_reasons = overdue_reasons.sort_values(by='Customer Name', ascending=False)
+
+            # Display the DataFrame with specified column configurations
+            st.divider()
+            st.subheader("Customer with various reasons")
+
+            st.dataframe(
+                overdue_reasons,
+                use_container_width=True,
+                column_config={
+                    "Customer Name": st.column_config.TextColumn(width="medium"),
+                    "Reasons": st.column_config.TextColumn(width="large"),
+                    "To change to green": st.column_config.TextColumn(width="medium")
+                }
+            )
+
     if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Customers with Visit Days", expanded=True):
             # Convert 'Visit Date' to datetime
