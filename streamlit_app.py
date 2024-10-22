@@ -27,7 +27,39 @@ with open( "./styles.css" ) as css:
 # Page title
 st.title('Report Analytics')
 
-with st.expander('Description of the Report Analysis App', expanded=True):
+st.subheader('Upload Data')
+
+# Button to download file from S3
+if st.button("Fetch File from DB"):
+    st.info("Downloading the file from DB...")
+
+    # Initialize the S3 client with credentials
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_REGION
+    )
+
+    try:
+        # Download the file from S3
+        s3_response = s3.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
+        uploaded_file = s3_response['Body'].read()
+        
+        # Store the uploaded file in session state
+        st.session_state['uploaded_file'] = uploaded_file
+        st.success(f"{FILE_NAME} downloaded successfully from S3!")
+    except Exception as e:
+        st.error(f"Error downloading {FILE_NAME} from S3: {e}")
+else:
+    # Option to upload manually if not using S3
+    uploaded_file = st.file_uploader("Upload the excel file of (DPR Report)", type=["xlsx"])
+    
+    if uploaded_file:
+        st.session_state['uploaded_file'] = uploaded_file
+
+
+with st.expander('Description of the Report Analysis App', expanded=False):
     st.markdown('**What can this app do?**')
     st.info('This app allows you to perform a data analysis along with visual chart elements on the Master sheet within the PDR Report.')
     
@@ -47,38 +79,8 @@ if 'uploaded_file' not in st.session_state:
     st.session_state['uploaded_file'] = None
 
 # Sidebar for accepting input parameters
-with st.sidebar:
-    st.title('Upload Data')
-    
-    # Button to download file from S3
-    if st.button("Fetch File from DB"):
-        st.info("Downloading the file from DB...")
 
-        # Initialize the S3 client with credentials
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=AWS_REGION
-        )
-
-        try:
-            # Download the file from S3
-            s3_response = s3.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
-            uploaded_file = s3_response['Body'].read()
-            
-            # Store the uploaded file in session state
-            st.session_state['uploaded_file'] = uploaded_file
-            st.success(f"{FILE_NAME} downloaded successfully from S3!")
-        except Exception as e:
-            st.error(f"Error downloading {FILE_NAME} from S3: {e}")
-    else:
-        # Option to upload manually if not using S3
-        uploaded_file = st.file_uploader("Upload the excel file of (DPR Report)", type=["xlsx"])
-        
-        if uploaded_file:
-            st.session_state['uploaded_file'] = uploaded_file
-
+   
 # Main content
 if st.session_state["uploaded_file"]:
     uploaded_file = st.session_state['uploaded_file']
@@ -125,6 +127,93 @@ if st.session_state["uploaded_file"]:
             
             st.altair_chart(chart, use_container_width=True)
             st.dataframe(pdc_age, use_container_width=True)
+    
+    st.subheader("Overdue Balance Analysis")
+
+    if 'Reason' in df.columns and 'Customer Name' in df.columns:
+        with st.expander("Reasons for Overdue Balances", expanded=True):
+
+            def get_overdue_reasons(row):
+                reasons = []
+                
+                if row['Active/ Non-Active'] == 'Active':
+                    # Convert Payment Terms to string
+                    payment_terms = str(row['Payment Terms'])
+                    
+                    if payment_terms.startswith('LC'):
+                        if row['Balance (Latest)'] < row['LC Value'] * 1.1:
+                            reasons.append('Green')
+                        else:
+                            reasons.append('Need LC')
+                    elif row['Remaining Balance to Collect'] < 2500:
+                        reasons.append('Green')
+                    elif row['Total Overdue Bills'] == row['Balance (Latest)']:
+                        reasons.append('All Bills are Overdue against credit days')
+                    elif row['Balance (Latest)'] > 0:
+                        if payment_terms.startswith('PDC'):
+                            if row['Minimum PDC Requirement'] > 0:
+                                reasons.append('Required PDC')
+                            if row['PDC Max Age'] >= 14:
+                                reasons.append('Overdue PDC older than 14 days')
+                            elif 0 < row['PDC Max Age'] < 14:
+                                reasons.append('Overdue PDC days between 0-14 days')
+                            if row['Total (PDC) in hand'] >= row['Bill > 7 Days']:
+                                reasons.append('Green')
+                            elif row['Total (PDC) in hand'] >= row['Bill > 7 Days'] * 0.5:
+                                reasons.append('Yellow')
+                            else:
+                                reasons.append('Red')
+                        elif payment_terms == 'Non-PDC':
+                            if row['No. of Overdue Bills'] > 2 and row['Total Overdue Bills'] > 2500:
+                                reasons.append(f"No. of overdue bills above credit days - {row['No. of Overdue Bills']}")
+                            elif 0 < row['No. of Overdue Bills'] <= 2 and row['Total Overdue Bills'] > 2500:
+                                reasons.append('No. of overdue bills between 1-2')
+                            elif row['Balance (Latest)'] <= row['Credit Limit']:
+                                reasons.append('Green')
+                            elif row['Balance (Latest)'] <= row['Credit Limit'] * 1.25:
+                                reasons.append('Balance is less than 125% of limit')
+                            else:
+                                reasons.append('Balance is more than limit')
+                        elif payment_terms == 'Cash':
+                            if row['Balance (Latest)'] > 0:
+                                reasons.append('Cash needed')
+                            else:
+                                reasons.append('Green')
+                    else:
+                        reasons.append('Green')
+                else:
+                    reasons.append('Inactive')
+                
+                return ' | '.join(reasons)
+            
+            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
+            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Reasons', 'Remaining Balance to Collect',  'To change to green']]
+            overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
+            st.caption("Remaining Balance with th reason to change to green")
+
+            st.dataframe(overdue_reasons, use_container_width=True)
+
+            # Apply the function to get overdue reasons
+            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
+
+            # Filter rows where 'Reasons' is not empty
+            overdue_reasons = df[df['Reasons'].str.strip() != ''][['Customer Name', 'Reasons', 'To change to green']]
+            overdue_reasons = overdue_reasons.sort_values(by='Customer Name', ascending=False)
+
+            # Display the DataFrame with specified column configurations
+            # st.divider()
+            # st.subheader("Customer with various reasons")
+
+            # st.dataframe(
+            #     overdue_reasons,
+            #     use_container_width=True,
+            #     column_config={
+            #         "Customer Name": st.column_config.TextColumn(width="medium"),
+            #         "Reasons": st.column_config.TextColumn(width="large"),
+            #         "To change to green": st.column_config.TextColumn(width="medium")
+            #     }
+            # )
+
     if 'Overdue PDC' in df.columns and 'Customer Name' in df.columns:
         with st.expander("Overdue PDC Analysis", expanded=True):
             st.subheader("Overdue Post-Dated Cheque Analysis")
@@ -168,10 +257,8 @@ if st.session_state["uploaded_file"]:
             
             st.altair_chart(chart, use_container_width=True)
             st.dataframe(lbp_lbs, use_container_width=True)
-    
+
    
-
-
 
 
     # Active/Non-Active Analysis
@@ -479,87 +566,7 @@ if st.session_state["uploaded_file"]:
 
 
     # Overdue Reasons Analysis
-    if 'Reason' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Reasons for Overdue Balances", expanded=True):
-
-            def get_overdue_reasons(row):
-                reasons = []
-                
-                if row['Active/ Non-Active'] == 'Active':
-                    # Convert Payment Terms to string
-                    payment_terms = str(row['Payment Terms'])
-                    
-                    if payment_terms.startswith('LC'):
-                        if row['Balance (Latest)'] < row['LC Value'] * 1.1:
-                            reasons.append('Green')
-                        else:
-                            reasons.append('Need LC')
-                    elif row['Remaining Balance to Collect'] < 2500:
-                        reasons.append('Green')
-                    elif row['Total Overdue Bills'] == row['Balance (Latest)']:
-                        reasons.append('All Bills are Overdue against credit days')
-                    elif row['Balance (Latest)'] > 0:
-                        if payment_terms.startswith('PDC'):
-                            if row['Minimum PDC Requirement'] > 0:
-                                reasons.append('Required PDC')
-                            if row['PDC Max Age'] >= 14:
-                                reasons.append('Overdue PDC older than 14 days')
-                            elif 0 < row['PDC Max Age'] < 14:
-                                reasons.append('Overdue PDC days between 0-14 days')
-                            if row['Total (PDC) in hand'] >= row['Bill > 7 Days']:
-                                reasons.append('Green')
-                            elif row['Total (PDC) in hand'] >= row['Bill > 7 Days'] * 0.5:
-                                reasons.append('Yellow')
-                            else:
-                                reasons.append('Red')
-                        elif payment_terms == 'Non-PDC':
-                            if row['No. of Overdue Bills'] > 2 and row['Total Overdue Bills'] > 2500:
-                                reasons.append(f"No. of overdue bills above credit days - {row['No. of Overdue Bills']}")
-                            elif 0 < row['No. of Overdue Bills'] <= 2 and row['Total Overdue Bills'] > 2500:
-                                reasons.append('No. of overdue bills between 1-2')
-                            elif row['Balance (Latest)'] <= row['Credit Limit']:
-                                reasons.append('Green')
-                            elif row['Balance (Latest)'] <= row['Credit Limit'] * 1.25:
-                                reasons.append('Balance is less than 125% of limit')
-                            else:
-                                reasons.append('Balance is more than limit')
-                        elif payment_terms == 'Cash':
-                            if row['Balance (Latest)'] > 0:
-                                reasons.append('Cash needed')
-                            else:
-                                reasons.append('Green')
-                    else:
-                        reasons.append('Green')
-                else:
-                    reasons.append('Inactive')
-                
-                return ' | '.join(reasons)
-            
-            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
-            overdue_reasons = df[df['Remaining Balance to Collect'] > 0][['Customer Name', 'Remaining Balance to Collect', 'Reasons', 'To change to green']]
-            overdue_reasons = overdue_reasons.sort_values(by='Remaining Balance to Collect', ascending=False)
-            st.dataframe(overdue_reasons, use_container_width=True)
-
-            # Apply the function to get overdue reasons
-            df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
-
-            # Filter rows where 'Reasons' is not empty
-            overdue_reasons = df[df['Reasons'].str.strip() != ''][['Customer Name', 'Reasons', 'To change to green']]
-            overdue_reasons = overdue_reasons.sort_values(by='Customer Name', ascending=False)
-
-            # Display the DataFrame with specified column configurations
-            st.divider()
-            st.subheader("Customer with various reasons")
-
-            st.dataframe(
-                overdue_reasons,
-                use_container_width=True,
-                column_config={
-                    "Customer Name": st.column_config.TextColumn(width="medium"),
-                    "Reasons": st.column_config.TextColumn(width="large"),
-                    "To change to green": st.column_config.TextColumn(width="medium")
-                }
-            )
+   
 
         # Assuming 'Visit Date' and 'Customer Name' exist in your dataframe
     if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
