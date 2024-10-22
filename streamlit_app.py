@@ -1,20 +1,21 @@
 from io import BytesIO
 import io
-import os
+
 import boto3
-from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
 import time
 
-load_dotenv()
+AWS_ACCESS_KEY_ID = st.secrets["aws"]['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = st.secrets["aws"]['AWS_SECRET_ACCESS_KEY']
+AWS_REGION = st.secrets["aws"]['AWS_REGION']
 
-# AWS credentials
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_REGION = os.getenv('AWS_REGION')
+
+BUCKET_NAME = 'fujito-mis'  
+FILE_NAME = 'DPR 17.08.xlsx'
+
 BUCKET_NAME = 'fujito-mis'  
 FILE_NAME = 'DPR 17.08.xlsx'      
 
