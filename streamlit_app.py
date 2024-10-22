@@ -561,39 +561,47 @@ if st.session_state["uploaded_file"]:
                 }
             )
 
+        # Assuming 'Visit Date' and 'Customer Name' exist in your dataframe
     if 'Visit Date' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Customers with Visit Days", expanded=True):
-            # Convert 'Visit Date' to datetime
-            df['Visit Date'] = pd.to_datetime(df['Visit Date'], errors='coerce')
-            
-            # Create a custom sorting order for days of the week
-            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            
-            # Sort the dataframe by the Visit Date
-            due_this_week = df[['Customer Name', 'Visit Date']].dropna(subset=['Visit Date'])
-            due_this_week = due_this_week.sort_values('Visit Date')
-            
-            # Display the dataframe
-            st.dataframe(due_this_week, use_container_width=True)
-            
-            # Create a bar chart to visualize the distribution of visit days
-            visit_day_counts = due_this_week['Visit Date'].dt.day_name().value_counts().reindex(day_order).reset_index()
-            visit_day_counts.columns = ['Day', 'Count']
-            
-            chart = alt.Chart(visit_day_counts).mark_bar().encode(
-                x=alt.X('Day:N', sort=day_order),
-                y='Count:Q',
-                color=alt.Color('Day:N', scale=alt.Scale(scheme='category10')),
-                tooltip=['Day', 'Count']
-            ).properties(
-                title='Distribution of Customer Visit Days',
-                width=600,
-                height=400
-            )
-            
-            st.altair_chart(chart, use_container_width=True)
+        st.title("Customer Visit Days Distribution")
 
+        # Drop null values (if any) from 'Visit Day'
+        visit_days_cleaned = df['Visit Date'].dropna()
 
+        # Count occurrences of each day of the week
+        visit_day_counts = visit_days_cleaned.value_counts().reindex(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        ).reset_index()
+
+        visit_day_counts.columns = ['Day', 'Count']  # Rename columns for clarity
+
+        # Create a bar chart using Altair
+        bar_chart = alt.Chart(visit_day_counts).mark_bar().encode(
+            x=alt.X('Day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+            y=alt.Y('Count:Q', title="Number of Visits"),
+            color=alt.Color('Day:N', legend=None),
+            tooltip=['Day', 'Count']
+        ).properties(
+            title="Number of Visits per Day of the Week",
+            width=700,
+            height=400
+        )
+
+        # Display the chart in Streamlit
+        st.altair_chart(bar_chart, use_container_width=True)
+
+        # Select a day to filter customers visiting on that day
+        selected_day = st.selectbox("Select a Day to see customers", visit_day_counts['Day'])
+
+        if selected_day:
+            # Filter the dataframe to show only customers visiting on the selected dayf
+            customers_visiting = df[df['Visit Date'] == selected_day]['Customer Name']
+            
+            st.subheader(f"Customers visiting on {selected_day}")
+            if not customers_visiting.empty:
+                st.write(customers_visiting.reset_index(drop=True))  # Show the customers
+            else:
+                st.write(f"No customers are visiting on {selected_day}.")
        
 
     status.update(label="Analysis complete", state="complete", expanded=False)
