@@ -126,114 +126,6 @@ if not filtered_df.empty:
 else:
     st.write("No customers or agents found.")
 
-st.divider()
-status_comparison = df[['Customer Name', 'Agent', 'Last Week Status', 'Latest Status']].copy()
-
-# Add a new column to indicate if the status has changed
-status_comparison['Status Changed'] = status_comparison['Last Week Status'] != status_comparison['Latest Status']
-
-# Create the expander for status comparison
-with st.expander("Status Change Analysis", expanded=True):
-    st.subheader("Comparison of Last Week Status and Latest Status")
-
-    # Add a status filter
-    status_filter = st.selectbox("Filter by Status Change", ["All", "Changed", "Unchanged"])
-
-    # Add a search box
-    search_term = st.text_input("Search Customers or Agents 🔍", "", key='status_search')
-
-    # Filter the dataframe based on the status filter and search term
-    if status_filter == "Changed":
-        filtered_df = status_comparison[status_comparison['Status Changed']]
-    elif status_filter == "Unchanged":
-        filtered_df = status_comparison[~status_comparison['Status Changed']]
-    else:
-        filtered_df = status_comparison
-
-    if search_term:
-        filtered_df = filtered_df[
-            filtered_df['Customer Name'].str.contains(search_term, case=False) |
-            filtered_df['Agent'].str.contains(search_term, case=False)
-        ]
-
-    # Display the filtered dataframe
-    st.write(f"**Status Comparison ({status_filter}):**")
-    if not filtered_df.empty:
-        # Function to highlight changed status
-        def highlight_changed(row):
-            if row['Status Changed']:
-                return ['margin: 0'] * len(row)
-            return [''] * len(row)
-
-        # Display the dataframe with highlighting
-        display_df = filtered_df.drop(columns=['Status Changed'])
-        st.dataframe(filtered_df.style.apply(highlight_changed, axis=1), use_container_width=True, height=400)
-
-        # Display summary statistics
-        total_customers = len(filtered_df)
-        changed_status = filtered_df['Status Changed'].sum()
-        unchanged_status = total_customers - changed_status
-
-        st.write(f"Total Customers: {total_customers}")
-        st.write(f"Customers with Changed Status: {changed_status}")
-        st.write(f"Customers with Unchanged Status: {unchanged_status}")
-    else:
-        st.write("No customers or agents found.")
-
-    # Option to download the filtered data
-    if not filtered_df.empty:
-        csv = filtered_df.to_csv(index=False)
-        st.download_button(
-            label="Download filtered data as CSV",
-            data=csv,
-            file_name="status_comparison.csv",
-            mime="text/csv",
-        )
-
-
-st.divider()
-if "Active/ Non-Active" in df.columns:
-    active_count = df[df["Active/ Non-Active"] == "Active"].shape[0]
-    non_active_count = df[df["Active/ Non-Active"] == "Non-Active"].shape[0]
-    
-    st.success(f"Number of Active Accounts: {active_count}")
-    st.warning(f"Number of Non-active Accounts: {non_active_count}")
-    
-    pie_data = pd.DataFrame({
-        'Account Status': ['Active', 'Non-Active'],
-        'Count': [active_count, non_active_count]
-    })
-    
-    pie_chart = alt.Chart(pie_data).mark_arc(innerRadius=50).encode(
-        theta=alt.Theta(field="Count", type="quantitative"),
-        color=alt.Color(field="Account Status", type="nominal", scale=alt.Scale(domain=["Active", "Non-Active"], range=['#2ecc71', '#e74c3c']), legend=alt.Legend(title="Account Status")),
-        tooltip=["Account Status", "Count"]
-    ).properties(
-        width=400,
-        height=400,
-        title="Ratio of Active vs Non-Active Accounts"
-    )
-    
-    st.subheader("Customer Account Status")
-    st.altair_chart(pie_chart, use_container_width=True)
-
-    active_customers = df[df["Active/ Non-Active"] == "Active"][['Customer Name']]
-    non_active_customers = df[df["Active/ Non-Active"] == "Non-Active"][['Customer Name']]
-
-    with st.expander("Customer Accounts Overview of Active/Non-Active Accounts", expanded=True):
-        col1, col2 = st.columns([3, 3])
-
-        with col1:
-            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-            st.write("**Customers with Active Accounts:**")
-            st.dataframe(active_customers, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        with col2:
-            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-            st.write("**Customers with Non-Active Accounts:**")
-            st.dataframe(non_active_customers, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
 
 # Latest Status Analysis
 if 'Latest Status' in df.columns:
@@ -287,6 +179,115 @@ if 'Latest Status' in df.columns:
     
     st.subheader("Customer Account Status")
     st.altair_chart(status_bar_chart, use_container_width=True)
+
+st.divider()
+status_comparison = df[['Customer Name', 'Agent', 'Last Week Status', 'Latest Status']].copy()
+
+# Add a new column to indicate if the status has changed
+status_comparison['Status Changed'] = status_comparison['Last Week Status'] != status_comparison['Latest Status']
+
+# Create the expander for status comparison
+
+st.subheader("Comparison of Last Week Status and Latest Status")
+
+# Add a status filter
+status_filter = st.selectbox("Filter by Status Change", ["All", "Changed", "Unchanged"])
+
+# Add a search box
+search_term = st.text_input("Search Customers or Agents 🔍", "", key='status_search')
+
+# Filter the dataframe based on the status filter and search term
+if status_filter == "Changed":
+    filtered_df = status_comparison[status_comparison['Status Changed']]
+elif status_filter == "Unchanged":
+    filtered_df = status_comparison[~status_comparison['Status Changed']]
+else:
+    filtered_df = status_comparison
+
+if search_term:
+    filtered_df = filtered_df[
+        filtered_df['Customer Name'].str.contains(search_term, case=False) |
+        filtered_df['Agent'].str.contains(search_term, case=False)
+    ]
+
+# Display the filtered dataframe
+st.write(f"**Status Comparison ({status_filter}):**")
+if not filtered_df.empty:
+    # Function to highlight changed status
+    def highlight_changed(row):
+        if row['Status Changed']:
+            return ['margin: 0'] * len(row)
+        return [''] * len(row)
+
+    # Display the dataframe with highlighting
+    display_df = filtered_df.drop(columns=['Status Changed'])
+    st.dataframe(filtered_df.style.apply(highlight_changed, axis=1), use_container_width=True, height=400, hide_index=True)
+
+    # Display summary statistics
+    total_customers = len(filtered_df)
+    changed_status = filtered_df['Status Changed'].sum()
+    unchanged_status = total_customers - changed_status
+
+    st.write(f"Total Customers: {total_customers}")
+    st.write(f"Customers with Changed Status: {changed_status}")
+    st.write(f"Customers with Unchanged Status: {unchanged_status}")
+else:
+    st.write("No customers or agents found.")
+
+# Option to download the filtered data
+if not filtered_df.empty:
+    csv = filtered_df.to_csv(index=False)
+    st.download_button(
+        label="Download filtered data as CSV",
+        data=csv,
+        file_name="status_comparison.csv",
+        mime="text/csv",
+    )
+
+
+st.divider()
+if "Active/ Non-Active" in df.columns:
+    active_count = df[df["Active/ Non-Active"] == "Active"].shape[0]
+    non_active_count = df[df["Active/ Non-Active"] == "Non-Active"].shape[0]
+    
+    st.success(f"Number of Active Accounts: {active_count}")
+    st.warning(f"Number of Non-active Accounts: {non_active_count}")
+    
+    pie_data = pd.DataFrame({
+        'Account Status': ['Active', 'Non-Active'],
+        'Count': [active_count, non_active_count]
+    })
+    
+    pie_chart = alt.Chart(pie_data).mark_arc(innerRadius=50).encode(
+        theta=alt.Theta(field="Count", type="quantitative"),
+        color=alt.Color(field="Account Status", type="nominal", scale=alt.Scale(domain=["Active", "Non-Active"], range=['#2ecc71', '#e74c3c']), legend=alt.Legend(title="Account Status")),
+        tooltip=["Account Status", "Count"]
+    ).properties(
+        width=400,
+        height=400,
+        title="Ratio of Active vs Non-Active Accounts"
+    )
+    
+    st.subheader("Customer Account Status")
+    st.altair_chart(pie_chart, use_container_width=True)
+
+    active_customers = df[df["Active/ Non-Active"] == "Active"][['Customer Name']]
+    non_active_customers = df[df["Active/ Non-Active"] == "Non-Active"][['Customer Name']]
+
+    with st.expander("Customer Accounts Overview of Active/Non-Active Accounts", expanded=True):
+        col1, col2 = st.columns([3, 3])
+
+        with col1:
+            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+            st.write("**Customers with Active Accounts:**")
+            st.dataframe(active_customers, use_container_width=True, hide_index=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+            st.write("**Customers with Non-Active Accounts:**")
+            st.dataframe(non_active_customers, use_container_width=True, hide_index=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 # Separate section for Agents only
