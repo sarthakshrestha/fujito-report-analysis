@@ -112,6 +112,7 @@ else:
         st.altair_chart(status_bar_chart, use_container_width=True)
 
         st.divider()
+        st.subheader("Agent Filtering with Status")
 
         # Define status_colors here
         status_colors = {
