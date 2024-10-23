@@ -141,6 +141,39 @@ if 'Latest Status' in df.columns:
 
     st.divider()
 
+# New section for Top Agents with Selected Status Customers
+    st.subheader("Top Agents with Selected Status Customers")
+
+    # Create a dropdown to select the Latest Status
+    status_options = df['Latest Status'].unique()
+    selected_status = st.selectbox("Select Customer Status", status_options)
+
+    # Filter data for customers with the selected status
+    filtered_status_df = df[df['Latest Status'] == selected_status]
+
+    # Group by Agent and count the number of customers with the selected status
+    agent_status_count = filtered_status_df.groupby('Agent')['Customer Name'].count().reset_index()
+    agent_status_count.columns = ['Agent', f'{selected_status} Status Count']
+
+    # Sort the data to get the top agents (You can change the head number to display more or fewer agents)
+    top_agents = agent_status_count.sort_values(by=f'{selected_status} Status Count', ascending=False).head(10)
+
+    # Create a bar chart for the top agents with the selected status
+    top_agents_chart = alt.Chart(top_agents).mark_bar().encode(
+        x=alt.X('Agent:N', title="Agent", sort='-y'),
+        y=alt.Y(f'{selected_status} Status Count:Q', title=f"Number of Customers ({selected_status} Status)"),
+        color=alt.Color('Agent:N', legend=None),
+        tooltip=[alt.Tooltip('Agent:N', title="Agent"),
+                alt.Tooltip(f'{selected_status} Status Count:Q', title=f"{selected_status} Status Count")]
+    ).properties(
+        title=f"Top Agents with Most {selected_status} Status Customers",
+        width=700,
+        height=400
+    )
+
+    # Display the chart
+    st.altair_chart(top_agents_chart, use_container_width=True)
+
     st.subheader("**Count of Customers by Latest Status:**")
 
     st.markdown(f"**Green Status:** {green_count}")
