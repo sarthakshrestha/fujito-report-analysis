@@ -12,7 +12,7 @@ import time
 
 df = st.session_state["df"]
 
-st.title("Collection Efficiency")
+st.title("Collection Analysis")
 
 if df is None:
     st.markdown("### No Data Available")

@@ -116,10 +116,10 @@ else:
 
         # Define status_colors here
         status_colors = {
-            'Green': 'lightgreen',
-            'Inactive': 'lightblue',
-            'Red': 'lightcoral',
-            'Yellow': 'lightorange'
+            'Green': 'darkgreen',
+            'Inactive': 'darkblue',
+            'Red': 'darkred',
+            'Yellow': 'darkorange'
         }
 
         # Get unique Agents
