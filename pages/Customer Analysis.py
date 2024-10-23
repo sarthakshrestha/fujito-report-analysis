@@ -199,6 +199,6 @@ else:
             
             st.subheader(f"Customers visiting on {selected_day}")
             if not customers_visiting.empty:
-                st.write(customers_visiting.reset_index(drop=True))
+                st.dataframe(customers_visiting.reset_index(drop=True), use_container_width=True, hide_index=True)
             else:
                 st.write(f"No customers are visiting on {selected_day}.")
