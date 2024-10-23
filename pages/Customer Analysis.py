@@ -82,8 +82,10 @@ def get_overdue_reasons(row):
     return ' | '.join(reasons)
 
     # Apply the get_overdue_reasons function to create the 'Reasons' column
-if 'Reason' not in df.columns:
-    df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
+
+
+if 'Reasons' not in df.columns:
+        df['Reasons'] = df.apply(get_overdue_reasons, axis=1)
 
 # Get unique Agents
 unique_agents = df['Agent'].unique()
