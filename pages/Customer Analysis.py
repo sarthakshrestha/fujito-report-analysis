@@ -121,7 +121,7 @@ if search_term:
 
 st.write(f"**Customers and Agents for {selected_status}:**")
 if not filtered_df.empty:
-    df_display = filtered_df[['Customer Name', 'Latest Status', 'Agent', 'Reasons', 'To change to green']]
+    df_display = filtered_df[['Customer Name', 'Agent', 'Reasons', 'To change to green', 'Latest Status']]
     st.dataframe(df_display, use_container_width=True, height=300, hide_index=True)
 else:
     st.write("No customers or agents found.")
