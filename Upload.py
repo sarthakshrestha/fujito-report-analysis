@@ -81,28 +81,18 @@ else:
 
 # Description Expander
 with st.expander('Description of the Report Analysis App', expanded=False):
-    st.markdown('**What can this app do?**')
-    if report_type == "Select Report Type":
-        st.info('This app allows you to perform data analysis along with visual chart elements on various types of reports.')
-    else:
-        st.info(f'This app allows you to perform data analysis along with visual chart elements on the {report_type} Report.')
-    
+    st.markdown('**What does this app do?**')
+    st.info("This app automatically fetches report files from the database and performs data analysis with visual charts for different report types.")
+
     st.markdown('**How to use the app?**')
-    if report_type == "Select Report Type":
-        st.warning('Start by selecting a report type from the dropdown menu above.')
-    elif report_type == "DPR":
-        st.warning('For DPR reports, the file will be automatically fetched from the database. If automatic fetch fails, you can upload manually.')
-    else:
-        st.warning(f'To use the app with {report_type} reports, upload your file manually. The app will then display various analyses and visualizations based on the uploaded data.')
+    st.success('1. **Select Report Type**: Start by choosing a report type (e.g., DPR, ABC, DEF) from the dropdown.\n'
+               '2. **Automatic Fetch**: The app automatically retrieves the selected report from the database.\n'
+               '3. **View Data**: A preview of the fetched data is shown for quick validation.\n'
+               '4. **Analyze and Visualize**: You can explore the data through visual charts and summaries.')
     
-    st.markdown('**Under the hood**')
-    st.markdown('Libraries used:')
-    st.code('''
-    - Pandas for data wrangling
-    - Numpy for numerical operations
-    - Altair for chart creation
-    - Streamlit for the user interface
-    ''', language='markdown')
+    st.markdown('**Under the Hood**')
+    st.code('''- Pandas: Data analysis\n- NumPy: Numerical operations\n- Altair: Charts\n- Streamlit: User interface''', language='markdown')
+
 
 # Main content
 if st.session_state["uploaded_file"]:
@@ -133,9 +123,5 @@ if st.session_state["uploaded_file"]:
     
     status.update(label="Analysis complete", state="complete", expanded=False)
 else:
-    if report_type == "Select Report Type":
-        st.info('Select a report type to begin.')
-    elif report_type != "DPR":
-        st.info('Upload the file for analysis.')
     st.caption('Built by:')
     st.text('Digital Horizons')
