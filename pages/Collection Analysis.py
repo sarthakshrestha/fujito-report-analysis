@@ -53,7 +53,7 @@ else:
         )
 
         final_chart = (chart + text).interactive()
-        st.altair_chart(final_chart, use_container_width=True)
-        st.dataframe(remaining_balance, use_container_width=True)
+        st.altair_chart(final_chart, use_container_width=True, hide_index=True)
+        st.dataframe(remaining_balance, use_container_width=True, hide_index=True)
 
             

@@ -21,8 +21,9 @@ else:
     # Top customers with most Overdue PDCs
     st.subheader("Overdue PDCs")
     if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
-            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age']].sort_values(by='No. of Overdue PDCs', ascending=False)
-            st.dataframe(overdue_pdc, use_container_width=True)
+            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age', 'Total Overdue Bills']].sort_values(by='No. of Overdue PDCs', ascending=False)
+            overdue_pdc['Total Overdue Bills'] = overdue_pdc['Total Overdue Bills'].astype(int)
+            st.dataframe(overdue_pdc, use_container_width=True, hide_index=True)
 
     if 'Overdue PDC' in df.columns and 'Customer Name' in df.columns:
             st.subheader("Overdue Post-Dated Cheque Analysis")
@@ -42,4 +43,4 @@ else:
             )
             
             st.altair_chart(chart, use_container_width=True)
-            st.dataframe(overdue_pdc, use_container_width=True)
+            st.dataframe(overdue_pdc, use_container_width=True, hide_index=True)
