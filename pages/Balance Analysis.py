@@ -39,7 +39,6 @@ else:
         st.dataframe(balance_pdc, use_container_width=True)
 
     if 'Balance (Latest)' in df.columns and 'Customer Name' in df.columns:
-        with st.expander("Average Balance of Customers ", expanded=True):
             st.subheader("Average Balance of Customers")
 
             # Calculate average balance and sort by balance amount
