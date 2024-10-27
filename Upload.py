@@ -93,7 +93,6 @@ with st.expander('Description of the Report Analysis App', expanded=False):
     st.markdown('**Under the Hood**')
     st.code('''- Pandas: Data analysis\n- NumPy: Numerical operations\n- Altair: Charts\n- Streamlit: User interface''', language='markdown')
 
-
 # Main content
 if st.session_state["uploaded_file"]:
     uploaded_file = st.session_state['uploaded_file']
@@ -122,6 +121,47 @@ if st.session_state["uploaded_file"]:
         st.write(df.head(5))
 
     status.update(label="Analysis complete", state="complete", expanded=False)
+
+    # Agent Filtering Section
+    with st.expander("Agent Filtering", expanded=True):
+        # Create a search bar for agents
+        all_agents = df['Agent'].unique().tolist()
+        search_agent = st.text_input("Search Agent", "")
+
+        # Filter agents based on search
+        filtered_agents = [agent for agent in all_agents if search_agent.lower() in str(agent).lower()]
+
+        # Single select for filtered agents
+        selected_agent = st.selectbox(
+            "Select Agent",
+            options=["Select an Agent"] + filtered_agents,
+            index=0
+        )
+
+        if selected_agent and selected_agent != "Select an Agent":
+            # Filter DataFrame based on selected agent
+            filtered_df = df[df['Agent'] == selected_agent]
+
+            # Display relevant information
+            st.write(f"Showing data for {selected_agent}")
+
+            # Create tabs for different views
+
+            st.dataframe(
+                filtered_df[[
+                    'Agent', 'Customer Name', 'Active/ Non-Active',
+                    'Balance (Last Week)', 'Balance (Latest)',
+                    'Increase/ Decrease', 'Total (PDC) in hand',
+                    'Unmatured PDC', 'PDC Max Age', 'Overdue PDC',
+                    'Credit Limit', 'Credit Days', 'Payment Terms',
+                    'Latest Status', 'Remarks'
+                ]].reset_index(drop=True),
+                use_container_width=True, hide_index=True
+            )
+
+
+        else:
+            st.info("Please select an agent to view the data")
 
 else:
     st.caption('Built by:')
