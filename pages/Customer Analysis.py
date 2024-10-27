@@ -25,16 +25,16 @@ else:
         }
 
     # Define status_colors here
-    
+
 
         # Define the get_overdue_reasons function
 def get_overdue_reasons(row):
     reasons = []
-    
+
     if row['Active/ Non-Active'] == 'Active':
         # Convert Payment Terms to string
         payment_terms = str(row['Payment Terms'])
-        
+
         if payment_terms.startswith('LC'):
             if row['Balance (Latest)'] < row['LC Value'] * 1.1:
                 reasons.append('Green')
@@ -78,7 +78,7 @@ def get_overdue_reasons(row):
             reasons.append('Green')
     else:
         reasons.append('Inactive')
-    
+
     return ' | '.join(reasons)
 
     # Apply the get_overdue_reasons function to create the 'Reasons' column
@@ -91,7 +91,7 @@ if 'Reasons' not in df.columns:
 unique_agents = df['Agent'].unique()
 
     # Add Agent filter
-selected_agent = st.selectbox("Select Agent", 
+selected_agent = st.selectbox("Select Agent",
                             ['All Agents'] + list(unique_agents),
                             key='agent_filter')
 
@@ -121,7 +121,7 @@ if search_term:
 
 st.write(f"**Customers and Agents for {selected_status}:**")
 if not filtered_df.empty:
-    df_display = filtered_df[['Customer Name', 'Agent', 'Reasons', 'To change to green', 'Latest Status']]
+    df_display = filtered_df[['Agent', 'Customer Name', 'Reasons', 'To change to green', 'Latest Status']]
     st.dataframe(df_display, use_container_width=True, height=300, hide_index=True)
 else:
     st.write("No customers or agents found.")
@@ -190,7 +190,7 @@ if 'Latest Status' in df.columns:
         'Count': status_counts['Count'],
         'Data': status_counts['Data']
     })
-    
+
     status_bar_chart = alt.Chart(status_data).mark_bar().encode(
         x=alt.X('Status', title='Status'),
         y=alt.Y('Count', title='Count'),
@@ -202,19 +202,19 @@ if 'Latest Status' in df.columns:
             ),
             legend=alt.Legend(title="Status")
         ),
-        tooltip=[alt.Tooltip("Status", title="Status"), 
+        tooltip=[alt.Tooltip("Status", title="Status"),
                 alt.Tooltip("Count", title="Count")]
     ).properties(
         width=400,
         height=400,
         title="Distribution of Latest Status"
     )
-    
+
     st.subheader("Customer Account Status")
     st.altair_chart(status_bar_chart, use_container_width=True)
 
 st.divider()
-status_comparison = df[['Customer Name', 'Agent', 'Last Week Status', 'Latest Status']].copy()
+status_comparison = df[['Agent', 'Customer Name', 'Last Week Status', 'Latest Status']].copy()
 
 # Add a new column to indicate if the status has changed
 status_comparison['Status Changed'] = status_comparison['Last Week Status'] != status_comparison['Latest Status']
@@ -282,15 +282,15 @@ st.divider()
 if "Active/ Non-Active" in df.columns:
     active_count = df[df["Active/ Non-Active"] == "Active"].shape[0]
     non_active_count = df[df["Active/ Non-Active"] == "Non-Active"].shape[0]
-    
+
     st.success(f"Number of Active Accounts: {active_count}")
     st.warning(f"Number of Non-active Accounts: {non_active_count}")
-    
+
     pie_data = pd.DataFrame({
         'Account Status': ['Active', 'Non-Active'],
         'Count': [active_count, non_active_count]
     })
-    
+
     pie_chart = alt.Chart(pie_data).mark_arc(innerRadius=50).encode(
         theta=alt.Theta(field="Count", type="quantitative"),
         color=alt.Color(field="Account Status", type="nominal", scale=alt.Scale(domain=["Active", "Non-Active"], range=['#2ecc71', '#e74c3c']), legend=alt.Legend(title="Account Status")),
@@ -300,7 +300,7 @@ if "Active/ Non-Active" in df.columns:
         height=400,
         title="Ratio of Active vs Non-Active Accounts"
     )
-    
+
     st.subheader("Customer Account Status")
     st.altair_chart(pie_chart, use_container_width=True)
 
@@ -354,7 +354,7 @@ if "Active/ Non-Active" in df.columns:
 
     if selected_day:
         customers_visiting = df[df['Visit Date'] == selected_day]['Customer Name']
-        
+
         st.subheader(f"Customers visiting on {selected_day}")
         if not customers_visiting.empty:
             st.dataframe(customers_visiting.reset_index(drop=True), use_container_width=True, hide_index=True)

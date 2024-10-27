@@ -46,7 +46,7 @@ if report_type == "Select Report Type":
     st.info("Please select a report type to begin analysis.")
 elif report_type == "DPR":
     st.info("Automatically fetching DPR file from DB...")
-    
+
     # Initialize the S3 client with credentials
     s3 = boto3.client(
         's3',
@@ -54,12 +54,12 @@ elif report_type == "DPR":
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         region_name=AWS_REGION
     )
-    
+
     try:
         # Download the file from S3
         s3_response = s3.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
         uploaded_file = s3_response['Body'].read()
-        
+
         # Store the uploaded file in session state
         st.session_state['uploaded_file'] = uploaded_file
         st.session_state['report_type'] = "DPR"
@@ -89,7 +89,7 @@ with st.expander('Description of the Report Analysis App', expanded=False):
                '2. **Automatic Fetch**: The app automatically retrieves the selected report from the database.\n'
                '3. **View Data**: A preview of the fetched data is shown for quick validation.\n'
                '4. **Analyze and Visualize**: You can explore the data through visual charts and summaries.')
-    
+
     st.markdown('**Under the Hood**')
     st.code('''- Pandas: Data analysis\n- NumPy: Numerical operations\n- Altair: Charts\n- Streamlit: User interface''', language='markdown')
 
@@ -97,31 +97,32 @@ with st.expander('Description of the Report Analysis App', expanded=False):
 # Main content
 if st.session_state["uploaded_file"]:
     uploaded_file = st.session_state['uploaded_file']
-    
+
     with st.status(f"Analyzing {st.session_state['report_type']} report...", expanded=True) as status:
         if isinstance(uploaded_file, bytes):
             file_buffer = io.BytesIO(uploaded_file)
         else:
             file_buffer = uploaded_file
-            
+
         # Adjust sheet name and skip rows based on report type
         sheet_params = {
             "DPR": {"sheet_name": "Main", "skiprows": 1},
             "ABC": {"sheet_name": "Sheet1", "skiprows": 0},
             "DEF": {"sheet_name": "Sheet1", "skiprows": 0}
         }
-        
+
         current_params = sheet_params[st.session_state['report_type']]
         df = pd.read_excel(file_buffer, **current_params)
         st.session_state["df"] = df
-        
+
         if st.session_state['report_type'] == "DPR":
             df = df.drop(df.columns[0], axis=1)
-        
+
         st.write(f"**Preview of the {st.session_state['report_type']} Data**")
         st.write(df.head(5))
-    
+
     status.update(label="Analysis complete", state="complete", expanded=False)
+
 else:
     st.caption('Built by:')
     st.text('Digital Horizons')

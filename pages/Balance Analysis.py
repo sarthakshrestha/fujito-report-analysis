@@ -19,7 +19,7 @@ else:
     if 'Balance Cash' in df.columns and 'PDC' in df.columns and 'Customer Name' in df.columns:
         st.subheader("Balance Cash and PDC Analysis")
 
-        balance_pdc = df[['Customer Name', 'Balance Cash', 'PDC']].sort_values(by='Balance Cash', ascending=False)
+        balance_pdc = df[['Agent','Customer Name', 'Balance Cash', 'PDC']].sort_values(by='Balance Cash', ascending=False)
 
         # Melt the dataframe to create a long format for stacked bar chart
         balance_pdc_melted = pd.melt(balance_pdc, id_vars=['Customer Name'], var_name='Type', value_name='Amount')
@@ -36,5 +36,3 @@ else:
         )
 
         st.dataframe(balance_pdc, use_container_width=True, hide_index=True)
-
-   
