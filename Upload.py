@@ -185,56 +185,19 @@ if st.session_state["uploaded_file"]:
 
                 st.write(f"Showing data for {selected_agent}")
 
-                tab1, tab2 = st.tabs(["Detailed View", "Summary View"])
+                st.dataframe(
+                    filtered_df[[
+                        'Agent', 'Customer Name', 'Active/ Non-Active',
+                        'Balance (Last Week)', 'Balance (Latest)',
+                        'Increase/ Decrease', 'Total (PDC) in hand',
+                        'Unmatured PDC', 'PDC Max Age', 'Overdue PDC',
+                        'Credit Limit', 'Credit Days', 'Payment Terms',
+                        'Latest Status', 'Reasons', 'Remarks'
+                    ]].reset_index(drop=True),
+                    use_container_width=True, hide_index=True
+                )
 
-                with tab1:
-                    st.dataframe(
-                        filtered_df[[
-                            'Agent', 'Customer Name', 'Active/ Non-Active',
-                            'Balance (Last Week)', 'Balance (Latest)',
-                            'Increase/ Decrease', 'Total (PDC) in hand',
-                            'Unmatured PDC', 'PDC Max Age', 'Overdue PDC',
-                            'Credit Limit', 'Credit Days', 'Payment Terms',
-                            'Latest Status', 'Reasons', 'Remarks'
-                        ]].reset_index(drop=True),
-                        use_container_width=True
-                    )
 
-                with tab2:
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        st.metric(
-                            "Total Customers",
-                            len(filtered_df),
-                            delta=None
-                        )
-
-                    with col2:
-                        st.metric(
-                            "Total Balance",
-                            f"${filtered_df['Balance (Latest)'].sum():,.2f}",
-                            delta=None
-                        )
-
-                    with col3:
-                        st.metric(
-                            "Total PDC in Hand",
-                            f"${filtered_df['Total (PDC) in hand'].sum():,.2f}",
-                            delta=None
-                        )
-
-                    customer_balance_chart = alt.Chart(filtered_df).mark_bar().encode(
-                        x=alt.X('Customer Name:N', sort='-y'),
-                        y='Balance (Latest):Q',
-                        color=alt.value('#1f77b4'),
-                        tooltip=['Customer Name', 'Balance (Latest)', 'Reasons']
-                    ).properties(
-                        title=f'Customer Balances for {selected_agent}',
-                        height=400
-                    )
-
-                    st.altair_chart(customer_balance_chart, use_container_width=True)
             else:
                 st.info("Please select an agent to view the data")
 
