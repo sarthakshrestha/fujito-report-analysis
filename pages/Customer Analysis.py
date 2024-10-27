@@ -121,7 +121,7 @@ if search_term:
 
 st.write(f"**Customers and Agents for {selected_status}:**")
 if not filtered_df.empty:
-    df_display = filtered_df[['Agent', 'Customer Name', 'Reasons', 'To change to green', 'Latest Status']]
+    df_display = filtered_df[['Agent', 'Customer Name', 'Reasons', 'To change to green', 'Latest Status', 'LBP', 'Balance (Latest)']]
     st.dataframe(df_display, use_container_width=True, height=300, hide_index=True)
 else:
     st.write("No customers or agents found.")
@@ -214,7 +214,7 @@ if 'Latest Status' in df.columns:
     st.altair_chart(status_bar_chart, use_container_width=True)
 
 st.divider()
-status_comparison = df[['Agent', 'Customer Name', 'Last Week Status', 'Latest Status']].copy()
+status_comparison = df[['Agent', 'Customer Name', 'Last Week Status', 'Latest Status','To change to green']].copy()
 
 # Add a new column to indicate if the status has changed
 status_comparison['Status Changed'] = status_comparison['Last Week Status'] != status_comparison['Latest Status']

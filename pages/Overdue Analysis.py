@@ -21,14 +21,14 @@ else:
     # Top customers with most Overdue PDCs
     st.subheader("Overdue PDCs")
     if 'No. of Overdue PDCs' in df.columns and 'Customer Name' in df.columns and 'PDC Max Age' in df.columns:
-            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Customer Name', 'No. of Overdue PDCs', 'PDC Max Age', 'Total Overdue Bills']].sort_values(by='No. of Overdue PDCs', ascending=False)
+            overdue_pdc = df[df['No. of Overdue PDCs'] > 0][['Agent','Customer Name', 'No. of Overdue PDCs', 'PDC Max Age', 'Total Overdue Bills']].sort_values(by='No. of Overdue PDCs', ascending=False)
             overdue_pdc['Total Overdue Bills'] = overdue_pdc['Total Overdue Bills'].astype(int)
             st.dataframe(overdue_pdc, use_container_width=True, hide_index=True)
 
     if 'Overdue PDC' in df.columns and 'Customer Name' in df.columns:
             st.subheader("Overdue Post-Dated Cheque Analysis")
             
-            overdue_pdc = df[['Customer Name', 'Overdue PDC']].sort_values(by='Overdue PDC', ascending=False)
+            overdue_pdc = df[['Agent','Customer Name', 'Overdue PDC','Total Overdue Bills']].sort_values(by='Overdue PDC', ascending=False)
             overdue_pdc = overdue_pdc[overdue_pdc['Overdue PDC'] > 0]
             
             chart = alt.Chart(overdue_pdc).mark_bar().encode(
